@@ -13,3 +13,13 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Local SDK and JDK downloads
+/.jdk/
+/.sdk/
+/app/build/
+build/
+
+# Binaries and memory dumps
+*.hprof
+*.apk

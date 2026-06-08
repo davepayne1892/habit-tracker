@@ -3,7 +3,7 @@ package com.example.habittracker
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,9 +20,17 @@ import com.example.habittracker.ui.viewmodel.HabitViewModelFactory
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Request POST_NOTIFICATIONS runtime permission on Android 13+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val permission = android.Manifest.permission.POST_NOTIFICATIONS
+            if (checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(permission), 101)
+            }
+        }
         
         val database = AppDatabase.getDatabase(this)
-        val repository = HabitRepository(database.habitDao())
+        val repository = HabitRepository(database.habitDao(), database.petDao())
         val viewModelFactory = HabitViewModelFactory(application, repository)
 
         setContent {
@@ -66,5 +74,3 @@ fun HabitTrackerApp(viewModel: HabitViewModel) {
         }
     }
 }
-
-import androidx.compose.material3.Text

@@ -28,12 +28,27 @@ interface HabitDao {
     @Query("SELECT * FROM habit_logs WHERE habitId = :habitId")
     fun getLogsForHabit(habitId: Long): Flow<List<HabitLog>>
 
+    @Query("SELECT * FROM habit_logs")
+    fun getAllLogs(): Flow<List<HabitLog>>
+
     @Query("""
         SELECT h.*, hl.isCompleted 
         FROM habits h 
         LEFT JOIN habit_logs hl ON h.id = hl.habitId AND hl.date = :date
+        WHERE h.isArchived = 0
     """)
     fun getHabitsWithLogsForDate(date: String): Flow<List<HabitWithLog>>
+
+    @Query("""
+        SELECT h.*, hl.isCompleted 
+        FROM habits h 
+        LEFT JOIN habit_logs hl ON h.id = hl.habitId AND hl.date = :date
+        WHERE h.isArchived = 0
+    """)
+    suspend fun getHabitsWithLogsForDateSuspend(date: String): List<HabitWithLog>
+
+    @Query("UPDATE habits SET isArchived = 1 WHERE id = :id")
+    suspend fun archiveHabit(id: Long)
 }
 
 data class HabitWithLog(

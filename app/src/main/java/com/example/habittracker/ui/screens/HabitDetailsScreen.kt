@@ -1,5 +1,6 @@
 package com.example.habittracker.ui.screens
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -12,9 +13,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.habittracker.data.model.Habit
+import com.example.habittracker.data.model.HabitLog
 import com.example.habittracker.ui.components.BrutalButton
 import com.example.habittracker.ui.components.Heatmap
 import com.example.habittracker.ui.theme.BrutalMagenta
+import com.example.habittracker.ui.theme.BrutalGreen
 import com.example.habittracker.ui.viewmodel.HabitViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,9 +29,48 @@ fun HabitDetailsScreen(
 ) {
     var habit by remember { mutableStateOf<Habit?>(null) }
     val logs by viewModel.getLogsForHabit(habitId).collectAsState(initial = emptyList())
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(habitId) {
         habit = viewModel.getHabitById(habitId)
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("REMOVE '${habit?.name?.uppercase()}'?", fontWeight = FontWeight.Black) },
+            text = { Text("ARCHIVING HIDES THE HABIT FROM YOUR DAILY LIST BUT PRESERVES SPIKE'S XP AND CALENDAR HISTORY. DELETING WILL PERMANENTLY REMOVE ALL HISTORY.") },
+            confirmButton = {
+                BrutalButton(
+                    text = "ARCHIVE",
+                    onClick = {
+                        habit?.let {
+                            viewModel.archiveHabit(it.id)
+                            showDeleteDialog = false
+                            onBack()
+                        }
+                    },
+                    backgroundColor = BrutalGreen,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                )
+            },
+            dismissButton = {
+                BrutalButton(
+                    text = "DELETE PERMANENTLY",
+                    onClick = {
+                        habit?.let {
+                            viewModel.deleteHabit(it)
+                            showDeleteDialog = false
+                            onBack()
+                        }
+                    },
+                    backgroundColor = BrutalMagenta,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            containerColor = Color.White,
+            modifier = Modifier.border(2.5.dp, Color.Black)
+        )
     }
 
     Scaffold(
@@ -41,12 +83,7 @@ fun HabitDetailsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        habit?.let {
-                            viewModel.deleteHabit(it)
-                            onBack()
-                        }
-                    }) {
+                    IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete Habit")
                     }
                 },

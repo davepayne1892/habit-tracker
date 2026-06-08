@@ -26,10 +26,18 @@ class ReminderReceiver : BroadcastReceiver() {
             notificationManager.createNotificationChannel(channel)
         }
 
+        val messages = listOf(
+            Pair("SPIKE IS HUNGRY! 🦔🍴", "Feed me: '$habitName'! I need those completion points!"),
+            Pair("SPIKE: ACTION TIME! 💥", "BAM! Let's conquer this habit: '$habitName'!"),
+            Pair("SPIKE IS WAITING! 👀", "Spike says: 'Don't let my health decay! Complete: $habitName'"),
+            Pair("SPIKE WANTS XP! 📈", "Help Spike evolve! Time for your habit: $habitName")
+        )
+        val (title, text) = messages.random()
+
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Placeholder icon
-            .setContentTitle("Time for your habit!")
-            .setContentText("Don't forget to: $habitName")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(title)
+            .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
