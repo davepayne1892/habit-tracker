@@ -1,10 +1,14 @@
 package com.example.habittracker.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +27,7 @@ fun AddHabitScreen(
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf<String?>(null) } // Format "HH:mm"
+    var isWeight by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -83,13 +88,39 @@ fun AddHabitScreen(
                 )
             )
 
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isWeight = !isWeight }
+                    .border(2.5.dp, Color.Black)
+                    .background(if (isWeight) BrutalYellow else Color.White)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "WEIGHT TRACKING HABIT",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 14.sp
+                )
+                Checkbox(
+                    checked = isWeight,
+                    onCheckedChange = { isWeight = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = Color.Black,
+                        uncheckedColor = Color.Transparent,
+                        checkmarkColor = BrutalYellow
+                    )
+                )
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             BrutalButton(
                 text = "SAVE HABIT",
                 onClick = {
                     if (name.isNotBlank()) {
-                        viewModel.addHabit(name, description, reminderTime)
+                        viewModel.addHabit(name, description, reminderTime, isWeight)
                         onBack()
                     }
                 },

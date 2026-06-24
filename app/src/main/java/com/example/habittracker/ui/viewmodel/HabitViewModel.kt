@@ -6,6 +6,7 @@ import com.example.habittracker.data.dao.HabitWithLog
 import com.example.habittracker.data.model.Habit
 import com.example.habittracker.data.model.HabitLog
 import com.example.habittracker.data.model.PetState
+import com.example.habittracker.data.model.WeightLog
 import com.example.habittracker.data.repository.HabitRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -153,13 +154,33 @@ class HabitViewModel(application: Application, private val repository: HabitRepo
 
     suspend fun getHabitById(id: Long): Habit? = repository.getHabitById(id)
 
-    fun addHabit(name: String, description: String, reminderTime: String?) {
+    fun addHabit(name: String, description: String, reminderTime: String?, isWeight: Boolean = false) {
         viewModelScope.launch {
-            val habit = Habit(name = name, description = description, reminderTime = reminderTime)
+            val habit = Habit(name = name, description = description, reminderTime = reminderTime, isWeight = isWeight)
             val id = repository.insertHabit(habit)
             if (reminderTime != null) {
                 NotificationHelper.scheduleReminder(getApplication(), habit.copy(id = id))
             }
+        }
+    }
+
+    suspend fun getWeightLog(habitId: Long, dateStr: String): WeightLog? =
+        repository.getWeightLog(habitId, dateStr)
+
+    fun getWeightLogsForHabit(habitId: Long): Flow<List<WeightLog>> =
+        repository.getWeightLogsForHabit(habitId)
+
+    fun logWeight(habitId: Long, dateStr: String, weightKg: Double) {
+        viewModelScope.launch {
+            repository.insertWeightLog(WeightLog(habitId, dateStr, weightKg))
+            toggleHabit(habitId, true)
+        }
+    }
+
+    fun removeWeightLog(habitId: Long, dateStr: String) {
+        viewModelScope.launch {
+            repository.deleteWeightLog(habitId, dateStr)
+            toggleHabit(habitId, false)
         }
     }
 

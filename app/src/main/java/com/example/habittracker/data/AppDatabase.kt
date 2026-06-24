@@ -9,8 +9,9 @@ import com.example.habittracker.data.dao.PetDao
 import com.example.habittracker.data.model.Habit
 import com.example.habittracker.data.model.HabitLog
 import com.example.habittracker.data.model.PetState
+import com.example.habittracker.data.model.WeightLog
 
-@Database(entities = [Habit::class, HabitLog::class, PetState::class], version = 3, exportSchema = false)
+@Database(entities = [Habit::class, HabitLog::class, PetState::class, WeightLog::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
     abstract fun petDao(): PetDao

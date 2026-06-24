@@ -6,6 +6,7 @@ import com.example.habittracker.data.dao.HabitWithLog
 import com.example.habittracker.data.model.Habit
 import com.example.habittracker.data.model.HabitLog
 import com.example.habittracker.data.model.PetState
+import com.example.habittracker.data.model.WeightLog
 import kotlinx.coroutines.flow.Flow
 
 class HabitRepository(private val habitDao: HabitDao, private val petDao: PetDao) {
@@ -37,4 +38,15 @@ class HabitRepository(private val habitDao: HabitDao, private val petDao: PetDao
     fun getAllHabits(): Flow<List<Habit>> = habitDao.getAllHabits()
 
     fun getAllLogs(): Flow<List<HabitLog>> = habitDao.getAllLogs()
+
+    suspend fun insertWeightLog(weightLog: WeightLog) = habitDao.insertWeightLog(weightLog)
+
+    suspend fun getWeightLog(habitId: Long, date: String): WeightLog? =
+        habitDao.getWeightLog(habitId, date)
+
+    fun getWeightLogsForHabit(habitId: Long): Flow<List<WeightLog>> =
+        habitDao.getWeightLogsForHabit(habitId)
+
+    suspend fun deleteWeightLog(habitId: Long, date: String) =
+        habitDao.deleteWeightLog(habitId, date)
 }

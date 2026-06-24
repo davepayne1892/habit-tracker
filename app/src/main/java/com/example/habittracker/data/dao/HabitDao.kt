@@ -3,6 +3,7 @@ package com.example.habittracker.data.dao
 import androidx.room.*
 import com.example.habittracker.data.model.Habit
 import com.example.habittracker.data.model.HabitLog
+import com.example.habittracker.data.model.WeightLog
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -49,6 +50,18 @@ interface HabitDao {
 
     @Query("UPDATE habits SET isArchived = 1 WHERE id = :id")
     suspend fun archiveHabit(id: Long)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWeightLog(weightLog: WeightLog)
+
+    @Query("SELECT * FROM weight_logs WHERE habitId = :habitId AND date = :date")
+    suspend fun getWeightLog(habitId: Long, date: String): WeightLog?
+
+    @Query("SELECT * FROM weight_logs WHERE habitId = :habitId ORDER BY date ASC")
+    fun getWeightLogsForHabit(habitId: Long): Flow<List<WeightLog>>
+
+    @Query("DELETE FROM weight_logs WHERE habitId = :habitId AND date = :date")
+    suspend fun deleteWeightLog(habitId: Long, date: String)
 }
 
 data class HabitWithLog(

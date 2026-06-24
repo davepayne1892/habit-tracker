@@ -35,6 +35,8 @@ import com.example.habittracker.ui.theme.*
 import com.example.habittracker.ui.viewmodel.HabitViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +64,8 @@ fun DashboardScreen(
     ) { padding ->
         val petState by viewModel.petState.collectAsState(initial = null)
         var evolutionLevelPair by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+        var activeWeightHabitId by remember { mutableStateOf<Long?>(null) }
+        var showDeleteWeightDialogId by remember { mutableStateOf<Long?>(null) }
 
         LaunchedEffect(Unit) {
             viewModel.evolutionEvent.collect { pair ->
@@ -74,6 +78,46 @@ fun DashboardScreen(
                 oldLevel = oldLevel,
                 newLevel = newLevel,
                 onDismiss = { evolutionLevelPair = null }
+            )
+        }
+
+        activeWeightHabitId?.let { habitId ->
+            LogWeightDialog(
+                initialWeight = null,
+                onDismiss = { activeWeightHabitId = null },
+                onSave = { weight ->
+                    viewModel.logWeight(habitId, selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), weight)
+                    activeWeightHabitId = null
+                }
+            )
+        }
+
+        showDeleteWeightDialogId?.let { habitId ->
+            AlertDialog(
+                onDismissRequest = { showDeleteWeightDialogId = null },
+                title = { Text("REMOVE WEIGHT LOG?", fontWeight = FontWeight.Black) },
+                text = { Text("THIS WILL DELETE TODAY'S WEIGHT LOG AND MARK THE HABIT AS INCOMPLETE.") },
+                confirmButton = {
+                    BrutalButton(
+                        text = "DELETE",
+                        onClick = {
+                            viewModel.removeWeightLog(habitId, selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                            showDeleteWeightDialogId = null
+                        },
+                        backgroundColor = BrutalMagenta,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    )
+                },
+                dismissButton = {
+                    BrutalButton(
+                        text = "CANCEL",
+                        onClick = { showDeleteWeightDialogId = null },
+                        backgroundColor = Color.White,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                containerColor = Color.White,
+                modifier = Modifier.border(2.5.dp, Color.Black)
             )
         }
 
@@ -153,7 +197,17 @@ fun DashboardScreen(
                         HabitItem(
                             habitWithLog = habitWithLog,
                             index = index,
-                            onToggle = { viewModel.toggleHabit(habitWithLog.habit.id, it) },
+                            onToggle = { isChecked ->
+                                if (habitWithLog.habit.isWeight) {
+                                    if (isChecked) {
+                                        activeWeightHabitId = habitWithLog.habit.id
+                                    } else {
+                                        showDeleteWeightDialogId = habitWithLog.habit.id
+                                    }
+                                } else {
+                                    viewModel.toggleHabit(habitWithLog.habit.id, isChecked)
+                                }
+                            },
                             onClick = { onHabitClick(habitWithLog.habit.id) }
                         )
                     }
@@ -448,4 +502,88 @@ fun BrutalTopBar(
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LogWeightDialog(
+    initialWeight: Double?,
+    onDismiss: () -> Unit,
+    onSave: (Double) -> Unit
+) {
+    var weightInput by remember { mutableStateOf(initialWeight?.toString() ?: "") }
+    var isError by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "LOG WEIGHT",
+                fontWeight = FontWeight.Black,
+                fontFamily = SpaceGrotesk,
+                fontSize = 20.sp
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "ENTER YOUR WEIGHT IN KG:",
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = SpaceGrotesk,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedTextField(
+                    value = weightInput,
+                    onValueChange = {
+                        weightInput = it
+                        isError = it.toDoubleOrNull() == null
+                    },
+                    label = { Text("WEIGHT (KG)", fontWeight = FontWeight.Bold) },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = isError,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Black,
+                        focusedLabelColor = Color.Black
+                    )
+                )
+                if (isError) {
+                    Text(
+                        text = "PLEASE ENTER A VALID NUMBER",
+                        color = Color.Red,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            BrutalButton(
+                text = "SAVE",
+                onClick = {
+                    val weight = weightInput.toDoubleOrNull()
+                    if (weight != null && weight > 0) {
+                        onSave(weight)
+                    } else {
+                        isError = true
+                    }
+                },
+                backgroundColor = BrutalGreen,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        },
+        dismissButton = {
+            BrutalButton(
+                text = "CANCEL",
+                onClick = onDismiss,
+                backgroundColor = Color.White
+            )
+        },
+        containerColor = Color.White,
+        modifier = Modifier.border(2.5.dp, Color.Black)
+    )
+}
+
 

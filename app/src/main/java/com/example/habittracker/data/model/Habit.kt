@@ -10,5 +10,6 @@ data class Habit(
     val description: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val reminderTime: String? = null, // Format: "HH:mm"
-    val isArchived: Boolean = false
+    val isArchived: Boolean = false,
+    val isWeight: Boolean = false
 )
